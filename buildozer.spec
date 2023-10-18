@@ -7,10 +7,10 @@ title = MamaIgra
 package.name = mamaigra
 
 # (str) Package domain (needed for android/ios packaging)
-package.domain = www.www.org
+package.domain = org.www.www
 
 # (str) Source code where the main.py live
-source.dir = .
+source.dir = /
 
 # (list) Source files to include (let empty to include all the files)
 source.include_exts = py,png,jpg,kv,txt,atlas
