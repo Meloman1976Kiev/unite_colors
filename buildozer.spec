@@ -1,13 +1,13 @@
 [app]
 
 # (str) Title of your application
-title = SampleApp
+title = MamaIgra
 
 # (str) Package name
-package.name = sampleapk
+package.name = mamaigra
 
 # (str) Package domain (needed for android/ios packaging)
-package.domain = org.novfensec
+package.domain = www.www.org
 
 # (str) Source code where the main.py live
 source.dir = .
