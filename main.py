@@ -1,5 +1,5 @@
-import copy
-import random
+#import copy
+from numpy import random
 import pygame
 
 # initialize pygame
@@ -28,6 +28,7 @@ dop_prob = False
 tube_rects = []
 select_rect = 100
 win = False
+nazad = False
 level = 0
 
 
@@ -69,8 +70,7 @@ def generate_start(level):
             color = random.choice(available_colors)
             tubes_colors[i].append(color)
             available_colors.remove(color)
-    print(tubes_colors)
-    print(tubes_number)
+    
     return tubes_colors
 
 
@@ -205,7 +205,7 @@ def check_victory(colors):
                         won = False
     return won
 
-#my version of check winning
+#new version of check winning
 def check_win (list_tub):
     tube_true_false = []
     for t in list_tub:
@@ -217,7 +217,11 @@ def same_color (tube):
     T_F_color = all(i == tube[0] for i in tube)
     return T_F_color
 
-
+def copy_list (list):
+    copy = []
+    for i in list:
+        copy.append(i[:])
+    return copy
 
 # main game loop
 run = True
@@ -227,10 +231,14 @@ while run:
     # generate game board on new game, make a copy of the colors in case of restart
     if new_game:
         tube_colors = generate_start(level)
-        initial_colors = copy.deepcopy(tube_colors)
+        initial_colors = copy_list(tube_colors)
+        #initial_colors = copy.deepcopy(tube_colors)
         new_game = False
         level += 1
     # draw tubes every cycle
+    elif nazad:
+        tube_colors = copy_list(nazad_tube)
+        nazad = False
     else:
         tube_rects = draw_tubes(tube_colors)
     # check for victory every cycle
@@ -242,11 +250,12 @@ while run:
             run = False
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_SPACE:
-                tube_colors = copy.deepcopy(initial_colors)
+                tube_colors = copy_list(initial_colors)
+                #tube_colors = copy.deepcopy(initial_colors)
             elif event.key == pygame.K_RETURN:
                 new_game = True
             elif event.key == pygame.K_BACKSPACE:
-                nazad = 1
+                nazad = True
             elif event.key == pygame.K_d:
                 tube_colors.append([])
             elif event.key == pygame.K_r:
@@ -266,6 +275,8 @@ while run:
                 for item in range(len(tube_rects)):
                     if tube_rects[item].collidepoint(event.pos):
                         dest_rect = item
+                        #здесь делать копию тюбе_колорс для НАЗАД
+                        nazad_tube = copy_list(tube_colors)
                         tube_colors = calc_move(tube_colors, select_rect, dest_rect)
                         selected = False
                         select_rect = 100
