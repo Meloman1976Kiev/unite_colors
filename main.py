@@ -1,5 +1,5 @@
 #import copy
-from numpy import random
+import numpy as np
 import pygame
 
 # initialize pygame
@@ -14,10 +14,12 @@ font = pygame.font.Font(None, 62)
 font2 = pygame.font.Font(None, 400)
 fps = 30
 timer = pygame.time.Clock()
-color_choices = [(10, 31, 142), (255, 215, 0), (0, 139, 0), (255, 255, 255),
+
+all_colors = [(10, 31, 142), (255, 215, 0), (0, 139, 0), (255, 255, 255),
               (208, 32, 144), (238, 130, 238), (0, 134, 139), (0, 197, 205),
               (109, 0, 0), (225, 0, 0), (129, 61, 28), (205, 104, 57),
               (75, 16, 129), (135, 48, 215), (42, 63, 174), (0, 205, 102)]
+
 tube_colors = []
 initial_colors = []
 # 10 - 14 tubes, always start with two empty
@@ -29,7 +31,7 @@ tube_rects = []
 select_rect = 100
 win = False
 nazad = False
-level = 0
+level = 90
 
 
 
@@ -56,22 +58,32 @@ def new_level (level):
 
 # select a number of tubes and pick random colors upon new game setup
 def generate_start(level):
+    AC_index = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
     min, max = new_level(level)
-    tubes_number = random.randint(min, max)
+    tubes_number = np.random.randint(min, max)
     tubes_colors = []
-    available_colors = []
-    for i in range(tubes_number):
-        tubes_colors.append([])
-        if i < tubes_number - 2:
-            for j in range(4):
-                available_colors.append(i)
+    level_colors = []
+    kolb_cveta = []
+    clear = []
+
     for i in range(tubes_number - 2):
+        color = np.random.choice(AC_index)
+        level_colors.append(color)
+        AC_index.remove(color)
+    for i in level_colors:
         for j in range(4):
-            color = random.choice(available_colors)
-            tubes_colors[i].append(color)
-            available_colors.remove(color)
-    
-    return tubes_colors
+            kolb_cveta.append(i)
+    arr = np.asarray(kolb_cveta)
+    np.random.shuffle(arr)
+    random_kolb_cveta = arr.tolist()
+    for i in range(tubes_number - 2):
+        clear.append([])
+        for j in range(4):
+            clear[i].append(random_kolb_cveta[0])
+            del random_kolb_cveta[0]
+    clear.append([])
+    clear.append([])
+    return clear
 
 
 def get_offsets(prob_line):
@@ -104,15 +116,15 @@ def draw_tubes (tube_cols):
     for i in range(tubes_per_row):
         for j in range(len(tube_cols[i])):
             if j == 0:
-                pygame.draw.polygon(screen, color_choices[tube_cols[i][j]], ([spacing_1, 450], [spacing_1, 510], [spacing_1 + 25, 535], 
+                pygame.draw.polygon(screen, all_colors[tube_cols[i][j]], ([spacing_1, 450], [spacing_1, 510], [spacing_1 + 25, 535], 
                                     [spacing_1 + 79, 535], [spacing_1 + 104, 510], [spacing_1 + 104, 450]))
             else:
-                pygame.draw.rect(screen, color_choices[tube_cols[i][j]], [spacing_1, 450 - (85 * j), 105, 85])
+                pygame.draw.rect(screen, all_colors[tube_cols[i][j]], [spacing_1, 450 - (85 * j), 105, 85])
         box = pygame.draw.polygon(screen, (179, 204, 255), 
                                     [[spacing_1, 170], [spacing_1, 510], [spacing_1 + 25, 535], 
                                     [spacing_1 + 79, 535], [spacing_1 + 104, 510], [spacing_1 + 104, 170]], 3)
         if select_rect == i:
-            pygame.draw.rect(screen, 'green', [spacing_1 - 20, 145, 145, 415], 10, 10)
+            pygame.draw.rect(screen, 'light gray', [spacing_1 - 20, 145, 145, 415], 10, 10)
         tube_boxes.append(box)
         spacing_1 += spacing_1_tube
         
@@ -123,18 +135,18 @@ def draw_tubes (tube_cols):
         for i in range(tubes_per_row):
             for j in range(len(tube_cols[i + tubes_per_row])):
                 if j == 0:
-                    pygame.draw.polygon(screen, color_choices[tube_cols[i + tubes_per_row][j]], 
+                    pygame.draw.polygon(screen, all_colors[tube_cols[i + tubes_per_row][j]], 
                                         ([spacing_2, 900], [spacing_2, 960], [spacing_2 + 25, 985], 
                                     [spacing_2 + 79, 985], [spacing_2 + 104, 960], [spacing_2 + 104, 900]))
                 else:
-                    pygame.draw.rect(screen, color_choices[tube_cols[i + tubes_per_row][j]], 
+                    pygame.draw.rect(screen, all_colors[tube_cols[i + tubes_per_row][j]], 
                                     [spacing_2, 900 - (85 * j), 105, 85], 0, 3)
                                     
             box = pygame.draw.polygon(screen, (179, 204, 255), 
                                     [[spacing_2, 620], [spacing_2, 960], [spacing_2 + 25, 985], 
                                     [spacing_2 + 79, 985], [spacing_2 + 104, 960], [spacing_2 + 104, 620]], 3)
             if select_rect == i + tubes_per_row:
-                pygame.draw.rect(screen, 'green', [spacing_2 - 20, 595, 145, 415], 10, 10)
+                pygame.draw.rect(screen, 'light gray', [spacing_2 - 20, 595, 145, 415], 10, 10)
             tube_boxes.append(box)
             spacing_2 += spacing_2_tube
 
@@ -145,17 +157,17 @@ def draw_tubes (tube_cols):
         for i in range(tubes_per_row - 1):
             for j in range(len(tube_cols[i + tubes_per_row])):
                 if j == 0:
-                    pygame.draw.polygon(screen, color_choices[tube_cols[i + tubes_per_row][j]], 
+                    pygame.draw.polygon(screen, all_colors[tube_cols[i + tubes_per_row][j]], 
                                         ([spacing_2, 900], [spacing_2, 960], [spacing_2 + 25, 985], 
                                     [spacing_2 + 79, 985], [spacing_2 + 104, 960], [spacing_2 + 104, 900]))
                 else:
-                    pygame.draw.rect(screen, color_choices[tube_cols[i + tubes_per_row][j]], 
+                    pygame.draw.rect(screen, all_colors[tube_cols[i + tubes_per_row][j]], 
                                     [spacing_2, 900 - (85 * j), 105, 85], 0, 3)
             box = pygame.draw.polygon(screen, (179, 204, 255), 
                                     [[spacing_2, 620], [spacing_2, 960], [spacing_2 + 25, 985], 
                                     [spacing_2 + 79, 985], [spacing_2 + 104, 960], [spacing_2 + 104, 620]], 3)
             if select_rect == i + tubes_per_row:
-                pygame.draw.rect(screen, 'green', [spacing_2 - 20, 595, 145, 415], 10, 10)
+                pygame.draw.rect(screen, 'light gray', [spacing_2 - 20, 595, 145, 415], 10, 10)
             tube_boxes.append(box)
             spacing_2 += spacing_2_tube
     return tube_boxes
