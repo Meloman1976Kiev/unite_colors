@@ -1,6 +1,6 @@
-#import copy
 import numpy as np
 import pygame
+import button
 
 # initialize pygame
 pygame.init()
@@ -12,6 +12,8 @@ screen = pygame.display.set_mode([WIDTH, HEIGHT])
 pygame.display.set_caption('Игрулька для мамульки')
 font = pygame.font.Font(None, 62)
 font2 = pygame.font.Font(None, 400)
+font3 = pygame.font.Font(None, 58)
+
 fps = 30
 timer = pygame.time.Clock()
 
@@ -28,11 +30,10 @@ new_game = True
 selected = False
 dop_prob = False
 tube_rects = []
-select_rect = 100
+select_rect = None
 win = False
 nazad = False
-level = 90
-
+level = 0
 
 
 def new_level (level):
@@ -236,6 +237,18 @@ def copy_list (list):
     return copy
 
 # main game loop
+
+add_kolb_img = pygame.image.load("images/add_kolb.png").convert_alpha()
+restart_img = pygame.image.load("images/restart.png").convert_alpha()
+nazad_img = pygame.image.load("images/nazad.png").convert_alpha()
+new_img = pygame.image.load("images/new.png").convert_alpha()
+
+add_kolb_button = button.Button(1760, 20, add_kolb_img, 1)
+restart_button = button.Button(280, 20, restart_img, 1)
+nazad_button = button.Button(1510, 20, nazad_img, 1)
+new_button = button.Button(30, 20, new_img, 1)
+
+
 run = True
 while run:
     screen.fill('black')
@@ -292,13 +305,26 @@ while run:
                         tube_colors = calc_move(tube_colors, select_rect, dest_rect)
                         selected = False
                         select_rect = 100
+                        
+    win = True
+                
+    
     # draw 'victory' text when winning in middle, always show restart and new board text at top
+
     if win:
+        screen.fill('black')
+
+        pygame.draw.rect(screen, 'red', [250, 0, 1430, 1080], 0, 0)
+        #pygame.draw.rect(screen, 'gray', [0, 0, 1920, 1080], 10, 10)
         win_text = font2.render('ПОБЕДА!', True, 'white')
-        screen.blit(win_text, win_text.get_rect(center=(WIDTH/2 + 4, 574)))
-        win_text = font2.render('ПОБЕДА!', True, (200, 0, 0))
-        screen.blit(win_text, win_text.get_rect(center=(WIDTH/2, 570)))
-        
+        screen.blit(win_text, win_text.get_rect(center=(WIDTH/2 + 4, 400)))
+        win_text = font2.render('ПОБЕДА!', True, 'yellow')
+        screen.blit(win_text, win_text.get_rect(center=(WIDTH/2, 396)))
+        if new_button.draw(screen):
+            new_game = True
+        up_text_3 = font3.render("NEW", True, 'black')
+        place3 = (42, 50)
+        screen.blit(up_text_3, place3)
 
         #video = ПЛОХО! виснет
         #pygame.display.set_caption('Victory!')
@@ -310,12 +336,22 @@ while run:
     place = (WIDTH/2 - 150, 50)
     screen.blit(up_text, place)
     up_text_2 = font.render(str(level), True, 'white')
-    place = (WIDTH/2 + 50, 50)
-    screen.blit(up_text_2, place)
+    place2 = (WIDTH/2 + 50, 50)
+    screen.blit(up_text_2, place2)
+    
+    if add_kolb_button.draw(screen):
+        tube_colors.append([])
 
+    if restart_button.draw(screen):
+        tube_colors = copy_list(initial_colors)
 
-    #screen.blit(restart_text, (10, 10))
+    if nazad_button.draw(screen):
+        nazad = True                    
+    
+        
 
-    # display all drawn items on screen, exit pygame if run == False
+    
+
+    
     pygame.display.flip()
 pygame.quit()
