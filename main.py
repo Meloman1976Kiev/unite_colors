@@ -1,6 +1,8 @@
 import numpy as np
 import pygame
 import button
+from func.fact_choice import fact_choice
+
 
 # initialize pygame
 pygame.init()
@@ -236,122 +238,243 @@ def copy_list (list):
         copy.append(i[:])
     return copy
 
-# main game loop
-
-add_kolb_img = pygame.image.load("images/add_kolb.png").convert_alpha()
+#buttons
+set_img = pygame.image.load("images/set.png").convert_alpha()
 restart_img = pygame.image.load("images/restart.png").convert_alpha()
-nazad_img = pygame.image.load("images/nazad.png").convert_alpha()
-new_img = pygame.image.load("images/new.png").convert_alpha()
 
-add_kolb_button = button.Button(1760, 20, add_kolb_img, 1)
-restart_button = button.Button(280, 20, restart_img, 1)
-nazad_button = button.Button(1510, 20, nazad_img, 1)
-new_button = button.Button(30, 20, new_img, 1)
+set_button = button.Button(30, 20, set_img, 1)
+restart_button = button.Button(230, 20, restart_img, 1)
+
+nazad_wide_img = pygame.image.load("images/nazad_wide.png").convert_alpha()
+add_kolb_wide_img = pygame.image.load("images/add_kolb_wide.png").convert_alpha()
+exit_wide_img = pygame.image.load("images/exit_wide.png").convert_alpha()
+
+nazad_button = button.Button(1230, 20, nazad_wide_img, 1)
+add_kolb_button = button.Button(1460, 20, add_kolb_wide_img, 1)
+exit_button = button.Button(1690, 20, exit_wide_img, 1)
+
+restart_big_img = pygame.image.load("images/win_BIG.png").convert_alpha()
+pobeda_big_img = pygame.image.load("images/win_BIG.png").convert_alpha()
+
+restart_big_button = button.Button(300, 765, restart_big_img, 1)
+pobeda_big_button = button.Button(990, 765, pobeda_big_img, 1)
+
+fact = False
+nazad_step = 0
+nazad_step_max = 5
+add_kolb_max = 1
+points = 100
+run = True
+check_move = []
+changes = False
+game_statement = 'game'
 
 
 run = True
 while run:
-    screen.fill('black')
-    timer.tick(fps)
-    # generate game board on new game, make a copy of the colors in case of restart
-    if new_game:
-        tube_colors = generate_start(level)
-        initial_colors = copy_list(tube_colors)
-        #initial_colors = copy.deepcopy(tube_colors)
-        new_game = False
-        level += 1
-    # draw tubes every cycle
-    elif nazad:
-        tube_colors = copy_list(nazad_tube)
-        nazad = False
-    else:
-        tube_rects = draw_tubes(tube_colors)
-    # check for victory every cycle
-    win = check_victory(tube_colors)
-    #win = check_win (tube_colors)
-    # event handling - Quit button exits, clicks select tubes, enter and space for restart and new board
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_SPACE:
-                tube_colors = copy_list(initial_colors)
-                #tube_colors = copy.deepcopy(initial_colors)
-            elif event.key == pygame.K_RETURN:
-                new_game = True
-            elif event.key == pygame.K_BACKSPACE:
-                nazad = True
-            elif event.key == pygame.K_d:
-                tube_colors.append([])
-            elif event.key == pygame.K_r:
-                tube_colors.pop(-1)
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if not selected:
-                for item in range(len(tube_rects)):
-                    if tube_rects[item].collidepoint(event.pos):
-                        if len (tube_colors[item]) == 4 and same_color(tube_colors[item]) == True:
-                            selected = False
-                            select_rect = None
-                        else:
-                            selected = True
-                            select_rect = item
-
-            else:
-                for item in range(len(tube_rects)):
-                    if tube_rects[item].collidepoint(event.pos):
-                        dest_rect = item
-                        #здесь делать копию тюбе_колорс для НАЗАД
-                        nazad_tube = copy_list(tube_colors)
-                        tube_colors = calc_move(tube_colors, select_rect, dest_rect)
-                        selected = False
-                        select_rect = 100
-                        
-    win = True
-                
-    
-    # draw 'victory' text when winning in middle, always show restart and new board text at top
-
-    if win:
+    if game_statement == 'menu':
         screen.fill('black')
-
-        pygame.draw.rect(screen, 'red', [250, 0, 1430, 1080], 0, 0)
-        #pygame.draw.rect(screen, 'gray', [0, 0, 1920, 1080], 10, 10)
-        win_text = font2.render('ПОБЕДА!', True, 'white')
-        screen.blit(win_text, win_text.get_rect(center=(WIDTH/2 + 4, 400)))
-        win_text = font2.render('ПОБЕДА!', True, 'yellow')
-        screen.blit(win_text, win_text.get_rect(center=(WIDTH/2, 396)))
-        if new_button.draw(screen):
-            new_game = True
-        up_text_3 = font3.render("NEW", True, 'black')
-        place3 = (42, 50)
-        screen.blit(up_text_3, place3)
-
-        #video = ПЛОХО! виснет
-        #pygame.display.set_caption('Victory!')
-        #clip = VideoFileClip('/home/m/fire.mp4')
-        #clip.preview()
-        #new_game = True
-    
-    up_text = font.render("Уровень", True, 'white')
-    place = (WIDTH/2 - 150, 50)
-    screen.blit(up_text, place)
-    up_text_2 = font.render(str(level), True, 'white')
-    place2 = (WIDTH/2 + 50, 50)
-    screen.blit(up_text_2, place2)
-    
-    if add_kolb_button.draw(screen):
-        tube_colors.append([])
-
-    if restart_button.draw(screen):
-        tube_colors = copy_list(initial_colors)
-
-    if nazad_button.draw(screen):
-        nazad = True                    
-    
+        timer.tick(fps)
+        
+        
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                pygame.quit()
+                quit()
+        pygame.display.update()
         
 
-    
+    if game_statement == 'game':
+        screen.fill('black')
+        timer.tick(fps)
+        # generate game board on new game, make a copy of the colors in case of restart
+        if new_game:
+            fact = False
+            tube_colors = generate_start(level)
+            start_colors = copy_list(tube_colors)
+            #nazad_list = copy_list(tube_colors)
+            new_game = False
+            add_kolb = add_kolb_max
+            level += 1
+            selected = False
+            #save_statement()
+            
+        # draw tubes every cycle
+        elif nazad:
+            tube_colors = copy_list(nazad_tube)
+            nazad = False
+        else:
+            tube_rects = draw_tubes(tube_colors)
+        # check for victory every cycle
+        win = check_victory(tube_colors)
+        if win:
+            game_statement = 'win'
+        #win = check_win (tube_colors)
+        # event handling - Quit button exits, clicks select tubes, enter and space for restart and new board
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_SPACE:
+                    tube_colors = copy_list(initial_colors)
+                    #tube_colors = copy.deepcopy(initial_colors)
+                elif event.key == pygame.K_RETURN:
+                    new_game = True
+                elif event.key == pygame.K_BACKSPACE:
+                    nazad = True
+                elif event.key == pygame.K_d:
+                    tube_colors.append([])
+                elif event.key == pygame.K_r:
+                    tube_colors.pop(-1)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if not selected:
+                    for item in range(len(tube_rects)):
+                        if tube_rects[item].collidepoint(event.pos):
+                            if len (tube_colors[item]) == 4 and same_color(tube_colors[item]):
+                                selected = False
+                                select_rect = None
+                            else:
+                                selected = True
+                                select_rect = item
 
+                else:
+                    for item in range(len(tube_rects)):
+                        if tube_rects[item].collidepoint(event.pos):
+                            dest_rect = item
+                            #здесь делать копию тюбе_колорс для НАЗАД
+                            nazad_tube = copy_list(tube_colors)
+                            tube_colors = calc_move(tube_colors, select_rect, dest_rect)
+                            selected = False
+                            select_rect = 100
+        if set_button.draw(screen):
+            game_statement = 'menu'
+        
+        if restart_button.draw(screen):
+            tube_colors = copy_list(start_colors)
+            add_kolb = 1
+            nazad_step = 0
+            nazad_list = []
+        
+        pygame.draw.rect(screen, 'gold', [430, 25, 260, 90], 0, 20)
+        #level_string = 'Пиастры ' + str(points)
+        level_text = pygame.font.Font(None, 100).render(str(points), True, 'black')
+        screen.blit(level_text, level_text.get_rect(center=(WIDTH/2 - 400, 70)))
+
+        pygame.draw.rect(screen, 'dark green', [760, 25, 400, 90], 0, 20)
+        level_string = 'Уровень ' + str(level)
+        level_text = pygame.font.Font(None, 70).render(level_string, True, 'white')
+        screen.blit(level_text, level_text.get_rect(center=(WIDTH/2, 70)))
+
+        if nazad_button.draw(screen):
+            print ('Before N ', tube_colors)
+            if nazad_step > 0: 
+                tube_colors = copy_list(nazad_list[-1])
+                nazad_list.pop(-1)
+                nazad_step -= 1
+                points -= 1
+            print ('After N ', tube_colors)
+
+        nazad_text = pygame.font.Font(None, 100).render(str(nazad_step), True, 'black')
+        screen.blit(nazad_text, nazad_text.get_rect(center=(WIDTH/2 + 390, 70)))
+
+        pygame.draw.rect(screen, 'gold', [1190, 90, 80, 50], 0, 10)
+        nazad_price_text = pygame.font.Font(None, 60).render(str(-2), True, 'black')
+        screen.blit(nazad_price_text, (1210, 95))
+
+        if add_kolb_button.draw(screen):
+            if add_kolb > 0:
+                print ()
+                tube_colors.append([])
+                if nazad_step != nazad_step_max:
+                    nazad_step += 1
+                    nazad_tube = copy_list(tube_colors)
+                    nazad_list.append(nazad_tube)
+                if nazad_step == nazad_step_max:
+                    nazad_tube = copy_list(tube_colors)
+                    nazad_list.pop(0)
+                    nazad_list.append(nazad_tube)
+                
+                add_kolb -= 1
+                points -= 10
+        add_kolb_text = pygame.font.Font(None, 100).render(str(add_kolb), True, 'black')
+        screen.blit(add_kolb_text, add_kolb_text.get_rect(center=(WIDTH/2 + 620, 70)))
+        pygame.draw.rect(screen, 'gold', [1420, 92, 80, 50], 0, 10)
+        add_kolb_price_text = pygame.font.Font(None, 60).render(str(-10), True, 'black')
+        screen.blit(add_kolb_price_text, (1430, 98))
     
-    pygame.display.flip()
-pygame.quit()
+        if exit_button.draw(screen):
+            run = False
+            pygame.quit()
+            quit()
+            
+        pygame.display.update()
+                            
+    if game_statement == 'win':
+        screen.fill('black')
+        timer.tick(fps)
+        
+        if not fact:
+            facts_line, srez = fact_choice()
+            fact = True
+
+        pygame.draw.rect(screen, 'red', [245, 100, 1440, 800], 0, 30)
+        pygame.draw.rect(screen, 'orange', [245, 100, 1440, 800], 10, 30)
+        win_text = font2.render('ПОБЕДА!', True, 'white')
+        screen.blit(win_text, win_text.get_rect(center=(WIDTH/2 + 4, 270)))
+        win_text = font2.render('ПОБЕДА!', True, 'gold')
+        screen.blit(win_text, win_text.get_rect(center=(WIDTH/2, 266)))
+        
+        pygame.draw.rect(screen, (150, 0, 0), [305, 420, 1320, 320], 0, 20)
+        pygame.draw.rect(screen, 'orange', [305, 420, 1320, 320], 10, 20)
+        
+        lines_y_pos = {1: 40, 2: 15, 3: -10, 4: -35, 5: -60, 6: -85} 
+        if len(srez) == 0:
+            line = ' '.join(facts_line[srez[i]:])
+            facts_text = pygame.font.Font(None, 48).render(str(line), True, 'yellow')
+            screen.blit(facts_text, facts_text.get_rect(center=(WIDTH/2, HEIGHT/2 + 170)))
+        else:
+            y = lines_y_pos[len(srez)]
+            for i in range(len(srez)):
+                if i != len(srez) - 1:
+                    line = ' '.join(facts_line[srez[i]:srez[i+1]])
+                    facts_text = pygame.font.Font(None, 48).render(str(line), True, 'yellow')
+                    screen.blit(facts_text, facts_text.get_rect(center=(WIDTH/2, HEIGHT/2 + y)))
+                    y += 50
+                else:
+                    line = ' '.join(facts_line[srez[i]:])
+                    facts_text = pygame.font.Font(None, 48).render(str(line), True, 'yellow')
+                    screen.blit(facts_text, facts_text.get_rect(center=(WIDTH/2, HEIGHT/2 + y)))
+                    
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+                pygame.quit()
+                quit()
+                
+        if restart_big_button.draw(screen):
+            tube_colors = copy_list(start_colors)
+            fact = False
+            nazad_step = 0
+            nazad_list = []
+            add_kolb = add_kolb_max
+            game_statement = 'game'
+            
+        if pobeda_big_button.draw(screen):
+            new_game = True
+            fact = False
+            points += 5
+            nazad_step = 0
+            nazad_list = []
+            add_kolb = add_kolb_max
+            game_statement = 'game'
+            
+        win_text_1 = font3.render("Пройти уровень еще раз", True, (150, 0, 0))
+        screen.blit(win_text_1, (377, 795))
+        win_text_2 = font3.render("Начать новый уровень (+5)", True, (150, 0, 0))
+        screen.blit(win_text_2, (1050, 795))
+
+        pygame.display.update()
+
+pygame.display.update()
